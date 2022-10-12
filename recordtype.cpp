@@ -21,6 +21,8 @@ RecordType* createRecordType(int length, ...) {
     string curName;
     int curType;
     int curN;
+
+    recordType->isVariableLength = false;
     for (int i = 0; i < length ; i ++) {
         switch (i % 3) {
             case 0:
@@ -46,8 +48,15 @@ RecordType* createRecordType(int length, ...) {
                     case 3:
                         recordType->byteSizes[i/3] = 4;
                         break;
-                    default:
+                    case 4:
                         recordType->byteSizes[i/3] = curN;
+                        break;
+                    case 5:
+                        recordType->byteSizes[i/3] = curN;
+                        recordType->isVariableLength = false;
+                        break;
+                    default:
+                        recordType->byteSizes[i/3] = -1;
 
                 }
 
@@ -56,21 +65,43 @@ RecordType* createRecordType(int length, ...) {
                 } else {
                     recordType->byteOffsets[i/3] = recordType->byteOffsets[(i/3) - 1] + recordType->byteSizes[(i/3) - 1];
                 }
-
                 (*recordType->fieldNameMap).insert({curName, curType});
-                
         }
+
+        return recordType;
     }
 }
 
 int getByteOffsetNumber(RecordType* rt, string field) {
-
+    int fieldIndex = (*rt->fieldNameMap).at(field);
+    return rt->byteOffsets[fieldIndex];
 }
 
 bool checkType(int length, ...) {
-    
+
 }
 
 string stringedType(int n) {
-
+    switch (n) {
+        case 0:
+            return "POINTER TYPE";
+            break;
+        case 1:
+            return "SMALLINT TYPE";
+            break;
+        case 2:
+            return "INTEGER TYPE";
+            break;
+        case 3:
+            return "REAL TYPE";
+            break;
+        case 4:
+            return "CHAR(N) TYPE";
+            break;
+        case 5:
+            return "VARCHAR(N) TYPE";
+            break;
+        default:
+            return "INVALID TYPE";
+    }                
 }
