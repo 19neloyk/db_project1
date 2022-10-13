@@ -1,5 +1,0 @@
-
-
-class Value {
-    int type
-}

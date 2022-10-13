@@ -72,6 +72,10 @@ struct RecordType {
     // (depending on field values)
     bool checkType(int length, ...);
 
+    // Convert a series of arguments representing an entry into an
+    // actual record that can be put on memory
+    void* convertToRecord(int length, ...);
+
     // Get string version of type
     string stringedType(int n); 
 };

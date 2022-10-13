@@ -77,9 +77,50 @@ int getByteOffsetNumber(RecordType* rt, string field) {
     return rt->byteOffsets[fieldIndex];
 }
 
-bool checkType(int length, ...) {
+void* convertToRecord(int length, ...) {
 
 }
+
+bool checkType(RecordType* rt, int length, ...) {
+    // Make sure the number of arguments is the same
+    if (rt->numFields != length/2) {
+        return false;
+    }
+
+    // Iterate over values of a new record type
+    va_list args;
+    va_start(args, length);
+
+    for (int i = 0; i < length ; i ++) {
+        int fieldType = rt->fieldTypes[i];
+        int byteLimit = rt->byteSizes[i];
+        char* fieldValue = va_arg(args, char*);
+    }
+    
+}
+
+// Helper function to convert element into a certain type
+char* convertValueToType (int type, char* valueInStringFormat) {
+    switch (type) {
+        case 0:
+            break;
+        case 1:
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        default:
+            
+            break;
+
+    }
+}
+
 
 string stringedType(int n) {
     switch (n) {
@@ -104,4 +145,3 @@ string stringedType(int n) {
         default:
             return "INVALID TYPE";
     }                
-}
