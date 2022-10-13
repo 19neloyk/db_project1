@@ -99,27 +99,95 @@ bool checkType(RecordType* rt, int length, ...) {
     
 }
 
-// Helper function to convert element into a certain type
-char* convertValueToType (int type, char* valueInStringFormat) {
+void* convertStringToValue(int type, char* valueString) {
     switch (type) {
-        case 0:
+        case 0: // Pointer type
+
             break;
-        case 1:
+        case 1: // Smallint type
+            return (void*) short* converted = (short*) malloc ();
             break;
-        case 2:
+        case 2: // Integer type
+
             break;
-        case 3:
+        case 3: // Realint type
+
             break;
-        case 4:
+        case 4: // Char(n) type
+
             break;
-        case 5:
+        case 5: // Varchar(n) type
+
             break;
         default:
+            // Invalid type
+            return NULL;
+    }
+}
+    
+
+// Helper function to convert element into a character array
+// we can store in our database
+char* convertValueToType (int type, void* roughValue, int byteLimit) {
+    switch (type) {
+        case 0: // Pointer type 
+            char* serialized = (char*) roughValue;
+            return serialized;
+            break; 
+        case 1: // smallint type - will be a short
+            char* serialized = (char*) roughValue;
+            return serialized;
+            break; 
+            break;
+        case 2: // integer type - will be an int
+            char* serialized = (char*) roughValue;
+            return serialized;
+            break;
+        case 3: // real type - will be a double
+            char* serialized = (char*) roughValue;
+            return serialized;
+            break;
+        case 4: // char(n) type; returns array of exactly n characters; padded with spaces
+            // Cast to char* type
+            char* serialized = (char*) roughValue;
+
+            // Make sure length of string is not greater than n (the byteLimit)
+            if (strlen(serialized) > byteLimit) {
+                return NULL;
+            }
+            // Get string we will return, make it n spaces
+            // so we don't have to worry about padding 
+            char* fullString = (char*) malloc(byteLimit);
+            for (int i = 0 ; i < byteLimit ; i ++) {
+                *fullString = ' ';
+            }
+
+            // Copy initial string to space padded string
+            strcpy(fullString, serialized);
             
+            return fullString;
+            break;
+        case 5: // varchar(n) type
+            // Cast to char* type
+            char* serialized = (char*) roughValue;
+
+            // Make sure length of string is not greater than n (the byteLimit)
+            if (strlen(serialized) > byteLimit) {
+                return NULL;
+            }
+
+            // Worry about separation with other characters (i.e. % or ~)
+            // at the block level
+            return serialized;
+            break;
+        default:
+            // Invalid type
+            return NULL;
             break;
 
     }
 }
+
 
 
 string stringedType(int n) {
