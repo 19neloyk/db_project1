@@ -67,7 +67,41 @@ RecordType* createRecordType(int length, ...) {
                 (*recordType->fieldNameMap).insert({curName, curType});
         }
 
-        recordType->maxSize = byteOffsets[numFields - 1] + recordType->byteSizes[numFields - 1];
+        // Now we determine the maximum size that the record array can be
+        if (recordType->isVariableLength == false) {
+            // This max size is pretty straightforward: it's the byte offset
+            // of the last element (counts number of bytes before the last
+            // element) plus the byte size of the last element
+            recordType->maxSize = recordType->byteOffsets[recordType->numFields - 1] + recordType->byteSizes[recordType->numFields - 1];
+        } else {
+            // This max size accounts for the fact that variable length
+            // entries have to be separated and ended with a character
+            // and that the variable length fields themselves have to
+            // be separated and prepended with a character themselves
+
+            // Initially the same size calculation as for the non
+            // variable length type
+            int maxSize = recordType->byteOffsets[recordType->numFields - 1] + recordType->byteSizes[recordType->numFields - 1];
+            
+            // Number of variable-length fields
+            int numVariates = 0;
+            for (int i = 0 ; i < recordType->numFields ; i ++) {
+                if (recordType->fieldTypes[i] == 5) {
+                    numVariates ++;
+                }
+            }
+
+            // Add opening and closing symbols (~) for each variable-sized field
+            // to max size
+            maxSize += (2 * numVariates);
+
+            // Add opening and closing symbols (%) for each entry to max size
+            maxSize += 2;
+
+            recordType->maxSize = maxSize;
+        }
+
+
         return recordType;
     }
 }
@@ -133,9 +167,15 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
     va_list args;
     va_start(args, length);
 
-    // The record we will end up returning
-    char* dbRecord = (char*) malloc(maxSize);
+    // The character string we will end up returning
+    char* dbRecord = (char*) malloc(rt->maxSize);
     char* currentLocation = dbRecord;
+
+    // Variable-length entry case --> opening '%'
+    if (rt->isVariableLength) {
+        *currentLocation = '%';
+    }
+
     for (int i = 0; i < length ; i ++) {
         int fieldType = rt->fieldTypes[i];
         int byteLimit = rt->byteSizes[i];
@@ -148,9 +188,68 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
         if (serializedValue == NULL) {
             return NULL;
         }
-        // We add this field to our array of bytes
 
+        // Converted fieldValue to serialized char arr that will
+        // be stored as a record
+
+        // Opening '~' character in case this is a variable length
+        // char (fieldType of 5)
+        if (fieldType == 5) {
+            *currentLocation = '~';
+            currentLocation ++;
+        }
+
+        // Note that serializedValue is the current field's value
+        // We add this field to our array of bytes
+        strcpy(currentLocation, serializedValue);
+        
+        // Move current location forward by the length of the current
+        // field value so as to append the next field value correctly
+        currentLocation += strlen(serializedValue);
+
+        // Closing '~' character in case this is a variable length
+        // char (fieldType of 5)
+        if (fieldType == 5) {
+            *currentLocation = '~';
+            currentLocation ++;
+        }
     }
+
+    // Variable-length entry case --> closing '%'
+    if (rt->isVariableLength) {
+        *currentLocation = '%';
+    }
+
+    // At this point, our dbRecord character array can act as our record.
+    // However, we have to "trim" our dbRecord in case it is variable length.
+    // This is because if our record is variable-length, then it might necessarily
+    // be the same size as we allocated to the dbRecord array. So we have to 
+    // account for this
+
+    if (rt->isVariableLength) {
+        // Get EXACT length of the inhabited part of the dbRecord array
+        // We do this by subtracting the location between the end of the
+        // inhabited part of dbRecord (currently stored in the
+        // currentLocation array)
+        ptrdiff_t actualLength = currentLocation - dbRecord;
+        char* tightDBRecord = (char*) malloc(actualLength);
+        
+        // Now we copy the elements from the original dbRecord to the
+        // smaller variable-adjusted tightDBRecord
+        char* originalPtr = dbRecord;
+        char* tightPtr = tightDBRecord;
+        for (int i = 0 ; i < actualLength ; i ++) {
+            *tightPtr = *originalPtr;
+            tightPtr ++;
+            originalPtr++;
+        }
+
+        return tightDBRecord;
+    } else {    // Don't need the else, but added for clarity to see the two situations
+        return dbRecord;
+    }
+
+
 }
 
 
