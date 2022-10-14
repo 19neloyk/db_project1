@@ -47,6 +47,9 @@ struct RecordType {
     // This array is constructed upon creation of the record type
     int* byteOffsets;
 
+    // Maximum possible size of a record
+    int maxSize;
+
     /**
      * @brief Get the number of bytes offset by for a given field,
      * i.e. for records in block a, this entry might start at
@@ -68,13 +71,31 @@ struct RecordType {
     // variable in size
     bool isVariableLength;
 
+    /**
+     * @brief Get the number of types in a string
+     * 
+     * @param stringedType 
+     * @return int representing the variable type 
+     */
+    int getFieldType(char* typeString);
+
+    /**
+     * @brief Get the number of bytes with the specified type string
+     * i.e. "CHAR(15)" or "VARCHAR(10)"
+     * 
+     * @param stringedType 
+     * @return int representing number of bytes 
+     */
+    int getFieldBytes(char* stringedType);
+
     // Checks whether a certain entry is of this RecordType
     // (depending on field values)
     bool checkType(int length, ...);
 
     // Convert a series of arguments representing an entry into an
     // actual record that can be put on memory
-    void* convertToRecord(int length, ...);
+    //NOTE: This is only for database entries, not Index entries!
+    void* convertToDBRecord(int length, ...);
 
     // Get string version of type
     string stringedType(int n); 

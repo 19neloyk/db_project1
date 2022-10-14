@@ -12,7 +12,6 @@ RecordType* createRecordType(int length, ...) {
     recordType->fieldTypes = (int*) malloc (sizeof(recordType->numFields));
     recordType->byteSizes = (int*) malloc (sizeof(recordType->numFields));
     recordType->byteOffsets = (int*) malloc (sizeof(recordType->numFields));
-
     recordType->fieldNameMap = new map<string, int>();
 
     va_list args;
@@ -68,6 +67,7 @@ RecordType* createRecordType(int length, ...) {
                 (*recordType->fieldNameMap).insert({curName, curType});
         }
 
+        recordType->maxSize = byteOffsets[numFields - 1] + recordType->byteSizes[numFields - 1];
         return recordType;
     }
 }
@@ -77,50 +77,106 @@ int getByteOffsetNumber(RecordType* rt, string field) {
     return rt->byteOffsets[fieldIndex];
 }
 
-void* convertToRecord(int length, ...) {
+int getFieldType(char* typeString) {
+    // Convert typeString to string type since it's easier to find
+    // substrings within
+    string convertedString(typeString);
 
+    if (convertedString.find("smallint")  != string::npos) {
+        // Small int case
+        return 1;
+    } else if (convertedString.find("integer")  != string::npos) {
+        // Integer case
+        return 2;
+    } else if (convertedString.find("real")  != string::npos) {
+        // Real int case
+        return 3;
+    } else if (convertedString.find("varchar")  != string::npos) {
+        // Var char case; we do this before char because doing a 'string.find'
+        // operation on a "varchar" would yield true
+        return 5;
+    } else if (convertedString.find("char")  != string::npos) {
+        // Char case
+        return 4;
+    }
+
+    // Case where this is not a valid type string
+    return -1;
 }
 
-bool checkType(RecordType* rt, int length, ...) {
+int getFieldBytes(char* stringedType) {
+    // Pointer detailing when the integer starts
+    char* intStart = stringedType;
+    
+    // Wait for pointer to get to '(' character, for example,
+    // in "VARCHAR(10)" or "CHAR(15)"
+    while (*intStart != '(') {
+        intStart++;
+    }
+
+    // Go to the start of the integer (which starts right after the
+    // '(' character)      
+    intStart ++;
+    
+    // Now we can parse the integer with the atoi function since
+    // intStart pointer is at the beginning of the integer
+    return atoi(intStart);
+}
+
+char* convertToDBRecord(RecordType* rt, int length, ...) {
     // Make sure the number of arguments is the same
     if (rt->numFields != length/2) {
-        return false;
+        return NULL;
     }
 
     // Iterate over values of a new record type
     va_list args;
     va_start(args, length);
 
+    // The record we will end up returning
+    char* dbRecord = (char*) malloc(maxSize);
+    char* currentLocation = dbRecord;
     for (int i = 0; i < length ; i ++) {
         int fieldType = rt->fieldTypes[i];
         int byteLimit = rt->byteSizes[i];
         char* fieldValue = va_arg(args, char*);
+        void* convertedValue = convertStringToValue(fieldType, fieldValue);
+        if (convertedValue == NULL) {
+            return NULL;
+        }
+        char* serializedValue = convertValueToType(fieldType, fieldValue, byteLimit);
+        if (serializedValue == NULL) {
+            return NULL;
+        }
+        // We add this field to our array of bytes
+
     }
-    
 }
+
+
 
 void* convertStringToValue(int type, char* valueString) {
     switch (type) {
-        case 0: // Pointer type
-
-            break;
         case 1: // Smallint type
-            return (void*) short* converted = (short*) malloc ();
+            short* converted = (short*) malloc (sizeof(short));
+            *converted = (short) stoi(valueString);
             break;
         case 2: // Integer type
-
+            int* converted = (int*) malloc (sizeof(int));
+            *converted = (int) stoi(valueString);
             break;
-        case 3: // Realint type
-
+        case 3: // Real type
+            float converted = stof(valueString);
             break;
         case 4: // Char(n) type
-
+            return valueString;
             break;
         case 5: // Varchar(n) type
-
+            return valueString;
             break;
         default:
-            // Invalid type
+            // Either type is 0 (which is a pointer, and we're never going to
+            //read that as a string or it is invalid (not in the range [0, 5])
             return NULL;
     }
 }
@@ -184,7 +240,6 @@ char* convertValueToType (int type, void* roughValue, int byteLimit) {
             // Invalid type
             return NULL;
             break;
-
     }
 }
 
