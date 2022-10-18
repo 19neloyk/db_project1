@@ -115,5 +115,14 @@ string stringedType(int n);
 RecordType* createRecordType( const char* primaryKey, int length, ...);
 
 
+/**
+ * @brief Get the value of a specified field for some entry
+ * @param rt the record type that is reflected by this piece of data
+ * @param serializedEntry the data entry serialized in char* form
+ * @param fieldName the fieldName that we want to access from the entry
+ * 
+ */
+void* getFieldValue (RecordType* rt, char* serializedEntry, const char* fieldName);
+
 
 #endif

@@ -384,3 +384,38 @@ RecordType* createRecordType(const char* primaryKey, int length, ...) {
 
     return recordType;
 }                
+
+
+void* getFieldValue (RecordType* rt, char* serializedEntry, const char* fieldName) {
+    // Deal with variable_length and non-variable-length entry case separately
+
+    // Variable length case
+    if (rt->isVariableLength) {
+        int fieldIndex = rt->fieldNameIndexMap->at(fieldName);
+        char* startPtr = serializedEntry;
+        
+        // We want the number of ~'s to be 2 * fieldIndex + 1
+        int fieldDividerCount = 0;
+        while (fieldDividerCount != 2 * fieldIndex + 1) {
+            if (*startPtr == '~') {
+                fieldDividerCount ++;
+            }
+        }
+
+        // Now start pointer should be located at the start of he field 
+        // Let us get the size of the field entry; accomodate the same
+        // code for both variable and constant-sized fields
+        int fieldSize = 0;
+        int i = 0;
+        while (*(startPtr + i) != '~') {
+            i++;
+            fieldSize ++;
+        }
+
+        
+
+    }
+
+    // Constant length case 
+
+}
