@@ -76,7 +76,10 @@ void testRecordType() {
         getFieldBytes("real") == 4
     );
 
-    // We will create example records to now
+    // We will create example records to test conversion functionality
+    
+    //TODO: Have to focus on the most effective way to deserialize and
+    // serialize data; must consider overarching design decisions
     /*
     multiAssert("convertToDBRecord",0
 
