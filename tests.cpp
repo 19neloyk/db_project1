@@ -18,7 +18,7 @@ void testRecordType() {
     printf("%s\n", constantRT->fieldNames[2]);
 
     // Used for multiple assertions
-    multiAssert("testCreateRecordType", 28, 
+    multiAssert("createRecordType", 28, 
         // Constant record type
         constantRT->maxSize == 31,
         constantRT->byteSizes[0] == 2,
@@ -33,7 +33,7 @@ void testRecordType() {
         constantRT->fieldNameValueMap->at("salary") == IntegerType,
         strcmp(constantRT->fieldNames[0], "age") == 0,
         strcmp(constantRT->fieldNames[1], "name") == 0,
-        // strcmp(constantRT->fieldNames[2], "salary") == 0,
+        strcmp(constantRT->fieldNames[2], "salary") == 0,
         constantRT->fieldTypes[0] == SmallIntType,
         constantRT->fieldTypes[1] == CharType,
         constantRT->fieldTypes[2] == IntegerType,
@@ -41,7 +41,7 @@ void testRecordType() {
         strcmp(constantRT->primaryField, "name") == 0,
 
         // Variable record type
-        pointerAndVariableRT->maxSize == sizeof(void*) + 8 + 4,
+        pointerAndVariableRT->maxSize == sizeof(void*) + 8 + 6,
         pointerAndVariableRT->byteSizes[0] == 8,
         pointerAndVariableRT->byteSizes[1] == sizeof(void*),
         pointerAndVariableRT->isVariableLength == true,
@@ -54,7 +54,7 @@ void testRecordType() {
         pointerAndVariableRT->numFields == 2
     );
     
-    multiAssert("testGetByteOffsetNumber", 5,
+    multiAssert("getByteOffsetNumber", 5,
         getByteOffsetNumber(constantRT, "age") == 0,
         getByteOffsetNumber(constantRT, "name") == 2,
         getByteOffsetNumber(constantRT, "salary") == 27,
@@ -62,20 +62,27 @@ void testRecordType() {
         getByteOffsetNumber(pointerAndVariableRT, "pointer") == 8
     );
 
+
+    multiAssert("getFieldType and getFieldBytes", 10,
+        getFieldType("smallint") == 1,
+        getFieldType("integer") == 2,
+        getFieldType("real") == 3,
+        getFieldType("char(100)") == 4,
+        getFieldType("varchar(78)") == 5,
+        getFieldBytes("char(3212)") == 3212,
+        getFieldBytes("varchar(78)") == 78,
+        getFieldBytes("smallint") == 2,
+        getFieldBytes("integer") == 4,
+        getFieldBytes("real") == 4
+    );
+
+    // We will create example records to now
     /*
-    multiAssert("testGetFieldType",0
+    multiAssert("convertToDBRecord",0
 
     );
 
-    multiAssert("testCheckType",0
-
-    );
-
-    multiAssert("testConvertToDBRecord",0
-
-    );
-
-    multiAssert("testStringedType",0
+    multiAssert("stringedType",0
 
     );
     */

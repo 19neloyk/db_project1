@@ -95,10 +95,6 @@ int getFieldType(char* typeString);
  */
 int getFieldBytes(char* stringedType);
 
-// Checks whether a certain entry is of this RecordType
-// (depending on field values)
-bool checkType(int length, ...);
-
 // Convert a series of arguments representing an entry into an
 // actual record that can be put on memory
 //NOTE: This is only for database entries, not Index entries!

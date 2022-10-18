@@ -101,20 +101,20 @@ int getFieldType(char* typeString) {
     // substrings within
     string convertedString(typeString);
 
-    if (convertedString.find("smallint")  != string::npos) {
+    if (convertedString.find("smallint") != string::npos) {
         // Small int case
         return 1;
-    } else if (convertedString.find("integer")  != string::npos) {
+    } else if (convertedString.find("integer") != string::npos) {
         // Integer case
         return 2;
-    } else if (convertedString.find("real")  != string::npos) {
+    } else if (convertedString.find("real") != string::npos) {
         // Real int case
         return 3;
-    } else if (convertedString.find("varchar")  != string::npos) {
+    } else if (convertedString.find("varchar") != string::npos) {
         // Var char case; we do this before char because doing a 'string.find'
         // operation on a "varchar" would yield true
         return 5;
-    } else if (convertedString.find("char")  != string::npos) {
+    } else if (convertedString.find("char") != string::npos) {
         // Char case
         return 4;
     }
@@ -124,6 +124,22 @@ int getFieldType(char* typeString) {
 }
 
 int getFieldBytes(char* stringedType) {
+    
+    // First deal with already preset size types (1 to 3) that
+    // the user can input:  smallint, integer, and real
+    int fieldType = getFieldType(stringedType);
+
+    if (fieldType == 1) {
+        return 2;
+    } else if (fieldType == 2) {
+        return 4;
+    } else if (fieldType == 3) {
+        return 4;
+    }
+
+    // Finally, we can deal with the types that do not have
+    // preset sizes: char and varchar
+
     // Pointer detailing when the integer starts
     char* intStart = stringedType;
     
@@ -177,9 +193,9 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
         // Converted fieldValue to serialized char arr that will
         // be stored as a record
 
-        // Opening '~' character in case this is a variable length
-        // char (fieldType of 5)
-        if (fieldType == 5) {
+        // Opening '~' character in case so that we can easily
+        // find the value for each field
+        if (rt->isVariableLength) {
             *currentLocation = '~';
             currentLocation ++;
         }
@@ -192,9 +208,9 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
         // field value so as to append the next field value correctly
         currentLocation += strlen(serializedValue);
 
-        // Closing '~' character in case this is a variable length
-        // char (fieldType of 5)
-        if (fieldType == 5) {
+        // Closing '~' character in variable length for same reason
+        // above
+        if (rt->isVariableLength) {
             *currentLocation = '~';
             currentLocation ++;
         }
@@ -354,17 +370,11 @@ RecordType* createRecordType(char* primaryKey, int length, ...) {
         // variable length type
         int maxSize = recordType->byteOffsets[recordType->numFields - 1] + recordType->byteSizes[recordType->numFields - 1];
         
-        // Number of variable-length fields
-        int numVariates = 0;
-        for (int i = 0 ; i < recordType->numFields ; i ++) {
-            if (recordType->fieldTypes[i] == 5) {
-                numVariates ++;
-            }
-        }
+        
 
-        // Add opening and closing symbols (~) for each variable-sized field
+        // Add opening and closing symbols (~) for each field
         // to max size
-        maxSize += (2 * numVariates);
+        maxSize += (2 * recordType->numFields);
 
         // Add opening and closing symbols (%) for each entry to max size
         maxSize += 2;
