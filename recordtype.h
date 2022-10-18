@@ -1,11 +1,20 @@
-#ifndef RECORD_H
-#define RECORD_H
+#ifndef RECORDTYPE_H
+#define RECORDTYPE_H
 #include <string>
 #include <map>
 #include <stdio.h>
 #include <stdarg.h>
 
 using namespace std;
+
+enum FieldType {
+    PointerType,
+    SmallIntType,
+    IntegerType,
+    RealType,
+    CharType,
+    VarType
+};
 
 struct RecordType {
     // Map from name of field to value of field;
@@ -28,17 +37,6 @@ struct RecordType {
     // Denotes the primary field
     string primaryField;
 
-
-    /**
-     * @brief creates a record type for entries to be of
-     * @param length the number of arguments
-     * @param ellipses (...) of form (fieldName, fieldType, fieldN, fieldName,
-     * fieldType, fieldN...), so triples (fieldN is 0 id fieldType is not char or
-     * varchar)
-     * @return a record type 
-     */
-    RecordType* createRecordType(int length, ...);
-
     // Indicates byte sizes of each entry of the fieldTypes
     int* byteSizes;
 
@@ -50,56 +48,65 @@ struct RecordType {
     // Maximum possible size of a record
     int maxSize;
 
-    /**
-     * @brief Get the number of bytes offset by for a given field,
-     * i.e. for records in block a, this entry might start at
-     * index a_i, so a specified field value for this might start
-     * at index a_{i + j}, where j is the byte offset number
-     * returned from this function
-     * 
-     * @param rt the record type we would like to extract from
-     * @param field the name of the field we want to get the
-     * byte offset of
-     * @return the byte offset number of the location of the given
-     * field relative to the start of the record (so assuming
-     * the record starts at index 0)
-     */
-    int getByteOffsetNumber(RecordType* rt, string field);
-
     // Whether there is a varchar field type within this record;
     // denotes that a record using this RecordType object is
     // variable in size
     bool isVariableLength;
-
-    /**
-     * @brief Get the number of types in a string
-     * 
-     * @param stringedType 
-     * @return int representing the variable type 
-     */
-    int getFieldType(char* typeString);
-
-    /**
-     * @brief Get the number of bytes with the specified type string
-     * i.e. "CHAR(15)" or "VARCHAR(10)"
-     * 
-     * @param stringedType 
-     * @return int representing number of bytes 
-     */
-    int getFieldBytes(char* stringedType);
-
-    // Checks whether a certain entry is of this RecordType
-    // (depending on field values)
-    bool checkType(int length, ...);
-
-    // Convert a series of arguments representing an entry into an
-    // actual record that can be put on memory
-    //NOTE: This is only for database entries, not Index entries!
-    void* convertToDBRecord(int length, ...);
-
-    // Get string version of type
-    string stringedType(int n); 
 };
 
+/**
+ * @brief Get the number of bytes offset by for a given field,
+ * i.e. for records in block a, this entry might start at
+ * index a_i, so a specified field value for this might start
+ * at index a_{i + j}, where j is the byte offset number
+ * returned from this function
+ * 
+ * @param rt the record type we would like to extract from
+ * @param field the name of the field we want to get the
+ * byte offset of
+ * @return the byte offset number of the location of the given
+ * field relative to the start of the record (so assuming
+ * the record starts at index 0)
+ */
+int getByteOffsetNumber(RecordType* rt, string field);
+
+/**
+ * @brief Get the number of types in a string
+ * 
+ * @param stringedType 
+ * @return int representing the variable type 
+ */
+int getFieldType(char* typeString);
+
+/**
+ * @brief Get the number of bytes with the specified type string
+ * i.e. "CHAR(15)" or "VARCHAR(10)"
+ * 
+ * @param stringedType 
+ * @return int representing number of bytes 
+ */
+int getFieldBytes(char* stringedType);
+
+// Checks whether a certain entry is of this RecordType
+// (depending on field values)
+bool checkType(int length, ...);
+
+// Convert a series of arguments representing an entry into an
+// actual record that can be put on memory
+//NOTE: This is only for database entries, not Index entries!
+void* convertToDBRecord(int length, ...);
+
+// Get string version of type
+string stringedType(int n); 
+
+/**
+ * @brief creates a record type for entries to be of
+ * @param length the number of arguments
+ * @param ellipses (...) of form (fieldName, fieldType, fieldN, fieldName,
+ * fieldType, fieldN...), so triples (fieldN is 0 id fieldType is not char or
+ * varchar)
+ * @return a record type 
+ */
+RecordType* createRecordType(int length, ...);
 
 #endif
