@@ -96,7 +96,7 @@ int getByteOffsetNumber(RecordType* rt, string field) {
     return rt->byteOffsets[fieldIndex];
 }
 
-int getFieldType(char* typeString) {
+int getFieldType(const char* typeString) {
     // Convert typeString to string type since it's easier to find
     // substrings within
     string convertedString(typeString);
@@ -123,7 +123,7 @@ int getFieldType(char* typeString) {
     return -1;
 }
 
-int getFieldBytes(char* stringedType) {
+int getFieldBytes(const char* stringedType) {
     
     // First deal with already preset size types (1 to 3) that
     // the user can input:  smallint, integer, and real
@@ -141,7 +141,7 @@ int getFieldBytes(char* stringedType) {
     // preset sizes: char and varchar
 
     // Pointer detailing when the integer starts
-    char* intStart = stringedType;
+    const char* intStart = stringedType;
     
     // Wait for pointer to get to '(' character, for example,
     // in "VARCHAR(10)" or "CHAR(15)"
@@ -279,7 +279,7 @@ string stringedType(int n) {
     }
 }
 
-RecordType* createRecordType(char* primaryKey, int length, ...) {
+RecordType* createRecordType(const char* primaryKey, int length, ...) {
 
     // Create the new record type
     RecordType* recordType = (RecordType*) malloc(sizeof(RecordType));

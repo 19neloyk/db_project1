@@ -42,7 +42,7 @@ struct RecordType {
     int* fieldTypes;
 
     // Denotes the primary field
-    char* primaryField;
+    const char* primaryField;
 
     // Indicates byte sizes of each entry of the fieldTypes;
     // this is in the same order as the 
@@ -84,7 +84,7 @@ int getByteOffsetNumber(RecordType* rt, string field);
  * @param stringedType 
  * @return int representing the variable type 
  */
-int getFieldType(char* typeString);
+int getFieldType(const char* typeString);
 
 /**
  * @brief Get the number of bytes with the specified type string
@@ -93,7 +93,7 @@ int getFieldType(char* typeString);
  * @param stringedType 
  * @return int representing number of bytes 
  */
-int getFieldBytes(char* stringedType);
+int getFieldBytes(const char* stringedType);
 
 // Convert a series of arguments representing an entry into an
 // actual record that can be put on memory
@@ -112,6 +112,8 @@ string stringedType(int n);
  * varchar)
  * @return a record type 
  */
-RecordType* createRecordType(char* primaryKey, int length, ...);
+RecordType* createRecordType( const char* primaryKey, int length, ...);
+
+
 
 #endif
