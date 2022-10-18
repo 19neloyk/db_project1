@@ -9,6 +9,7 @@
         "string_view": "cpp",
         "bitset": "cpp",
         "map": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "typeinfo": "cpp"
     }
 }

@@ -17,10 +17,17 @@ enum FieldType {
 };
 
 struct RecordType {
-    // Map from name of field to value of field;
+    // Array of field names as they appear in a record, i.e.
+    // fieldname_0, fieldname_1, fieldname_2, ... ,fieldname_k
+    char** fieldNames;
+
+    // Map from name of field to type value of field;
     // used for records in the table and records for each table
     // in primary database block
-    map<string, int>* fieldNameMap;
+    map<string, int>* fieldNameValueMap;
+
+    // Map from name of field to index in fieldNames arr
+    map<string, int>* fieldNameIndexMap;
 
     // Number of fields
     int numFields;
@@ -35,9 +42,10 @@ struct RecordType {
     int* fieldTypes;
 
     // Denotes the primary field
-    string primaryField;
+    char* primaryField;
 
-    // Indicates byte sizes of each entry of the fieldTypes
+    // Indicates byte sizes of each entry of the fieldTypes;
+    // this is in the same order as the 
     int* byteSizes;
 
 
@@ -101,12 +109,13 @@ string stringedType(int n);
 
 /**
  * @brief creates a record type for entries to be of
+ * @param primaryKey the primary key of this record type
  * @param length the number of arguments
  * @param ellipses (...) of form (fieldName, fieldType, fieldN, fieldName,
  * fieldType, fieldN...), so triples (fieldN is 0 id fieldType is not char or
  * varchar)
  * @return a record type 
  */
-RecordType* createRecordType(int length, ...);
+RecordType* createRecordType(char* primaryKey, int length, ...);
 
 #endif

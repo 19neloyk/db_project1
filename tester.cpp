@@ -21,9 +21,9 @@ bool multiAssert(const char* testName, int numTests, ...) {
         }
     }
     if (allTestsPassed) {
-        printf("ALL TESTS PASSED\n");
+        printf("RESULT FOR %s: ALL TESTS PASSED\n", testName);
     } else {
-        printf("ALL TESTS FAILED\n");
+        printf("RESULT FOR %s: NOT ALL TESTS HAVE PASSED\n", testName);
     }
 
     printf("------------------------------\n");
