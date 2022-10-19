@@ -98,7 +98,19 @@ int getFieldBytes(const char* stringedType);
 // Convert a series of arguments representing an entry into an
 // actual record that can be put on memory
 //NOTE: This is only for database entries, not Index entries!
-void* convertToDBRecord(int length, ...);
+
+/**
+ * @brief Converts a series of arguments into a serialized DB
+ * record that can actually by stored on blocks
+ * 
+ * @param rt the RecordType that this DB record is for
+ * @param length number of arguments; should also 
+ * be equal to numFields
+ * @param ... (fieldVal_1, fieldVal_2, ..., fieldVal_k)
+ * where every value is a string
+ * @return void* 
+ */
+char* convertToDBRecord(RecordType* rt, int length, ...);
 
 // Get string version of type
 string stringedType(int n); 
@@ -124,5 +136,21 @@ RecordType* createRecordType( const char* primaryKey, int length, ...);
  */
 void* getFieldValue (RecordType* rt, char* serializedEntry, const char* fieldName);
 
+/**
+ * @brief print out the value of a field in a certain entry
+ * 
+ * @param rt the record type that is reflected by this piece of data
+ * @param deserialized 
+ * @param fieldName the fieldName that we want to print from the entry
+ */
+void printFieldValue (RecordType* rt, void* deserialized, const char* fieldName);
+
+/**
+ * @brief get pointer of a value from its string and its type
+ * @param type the type of the value
+ * @param valueString the string that we want to parse the value from
+ * @return pointer of the parsed value
+ */
+void* convertStringToValue(int type, const char* valueString);
 
 #endif

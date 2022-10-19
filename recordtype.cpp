@@ -2,37 +2,27 @@
 using namespace std;
 
 
-void* convertStringToValue(int type, char* valueString) {
-    switch (type) {
-        case 1: // Smallint type
-            // We have to create a new scope because
-            // we want to reuse the variable name converted
-            {
-                short* converted = (short*) malloc (sizeof(short));
-                *converted = (short) stoi(valueString);
-                return converted;
-            }
-        case 2: // Integer type
-            {
-                int* converted = (int*) malloc (sizeof(int));
-                *converted = (int) stoi(valueString);
-                return converted;
-            }
-        case 3: // Real type
-            {
-                float* converted = (float*) malloc (sizeof(float));
-                *converted = stof(valueString);
-                return converted;
-            }
-        case 4: // Char(n) type
-            return valueString;
-        case 5: // Varchar(n) type
-            return valueString;
-        default:
-            // Either type is 0 (which is a pointer, and we're never going to
-            //read that as a string or it is invalid (not in the range [0, 5])
-            return NULL;
+void* convertStringToValue(int type, const char* valueString) {
+    if (type == 1) {
+        short* converted = (short*) malloc (sizeof(short));
+        *converted = (short) stoi(valueString);
+        return converted;
+    } else if (type == 2) {
+        int* converted = (int*) malloc (sizeof(int));
+        *converted = (int) stoi(valueString);
+        return converted;   
+    } else if (type == 3) {
+        float* converted = (float*) malloc (sizeof(float));
+        *converted = (float) stof(valueString);
+        return converted;
+    } else if (type == 4 || type == 5) {
+        char* converted = (char*) malloc (strlen(valueString));
+        strcpy(converted, valueString);
+        return converted;
     }
+
+    // Case where the value string does not match any type
+    return NULL;
 }
     
 
@@ -42,8 +32,19 @@ char* convertValueToType (int type, void* roughValue, int byteLimit) {
     // Serialization of first 4 types is straight forward
     // (already stored in a memory size we've defined,
     // so the casting is plain)
-    if (type < 4) {
-        char* serialized = (char*) roughValue;
+
+    if (type == 1) {
+        char* serialized = (char*) malloc (byteLimit);
+        *(short *) serialized  = * ((short*) roughValue);
+        return serialized;
+    } else if (type == 2) {
+        char* serialized = (char*) malloc (byteLimit);
+        printf("Int: %d\n", *((int*) roughValue));
+        *(int *) serialized  = * ((int*) roughValue);
+        return serialized;
+    } else if (type == 3) {
+        char* serialized = (char*) malloc (byteLimit);
+        *(float *) serialized  = * ((float*) roughValue);
         return serialized;
     }
 
@@ -160,9 +161,10 @@ int getFieldBytes(const char* stringedType) {
 
 char* convertToDBRecord(RecordType* rt, int length, ...) {
     // Make sure the number of arguments is the same
-    if (rt->numFields != length/2) {
+    if (rt->numFields != length) {
         return NULL;
     }
+
 
     // Iterate over values of a new record type
     va_list args;
@@ -178,21 +180,22 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
     }
 
     for (int i = 0; i < length ; i ++) {
+
         int fieldType = rt->fieldTypes[i];
         int byteLimit = rt->byteSizes[i];
         char* fieldValue = va_arg(args, char*);
+    
         void* convertedValue = convertStringToValue(fieldType, fieldValue);
         if (convertedValue == NULL) {
             return NULL;
         }
-        char* serializedValue = convertValueToType(fieldType, fieldValue, byteLimit);
+        char* serializedValue = convertValueToType(fieldType, convertedValue, byteLimit);
         if (serializedValue == NULL) {
             return NULL;
         }
 
         // Converted fieldValue to serialized char arr that will
         // be stored as a record
-
         // Opening '~' character in case so that we can easily
         // find the value for each field
         if (rt->isVariableLength) {
@@ -214,12 +217,14 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
             *currentLocation = '~';
             currentLocation ++;
         }
+
     }
 
     // Variable-length entry case --> closing '%'
     if (rt->isVariableLength) {
         *currentLocation = '%';
     }
+
 
     // At this point, our dbRecord character array can act as our record.
     // However, we have to "trim" our dbRecord in case it is variable length.
@@ -283,7 +288,6 @@ RecordType* createRecordType(const char* primaryKey, int length, ...) {
 
     // Create the new record type
     RecordType* recordType = (RecordType*) malloc(sizeof(RecordType));
-
     // Update primary key for this record type
     recordType->primaryField = primaryKey;
 
@@ -385,6 +389,18 @@ RecordType* createRecordType(const char* primaryKey, int length, ...) {
     return recordType;
 }                
 
+void printFieldValue (RecordType* rt, void* deserializedValue, const char* fieldName) {
+    int fieldValue = rt->fieldNameValueMap->at(fieldName);
+    if (fieldValue == SmallIntType || fieldValue == IntegerType) {
+        printf("%s %d\n", fieldName, *(int*) deserializedValue);
+    } else if (fieldValue == RealType) {
+        printf("%s %f\n", fieldName, *(float*) deserializedValue);
+    } else if (fieldValue == CharType || fieldValue == VarType) {
+        printf("%s %s\n", fieldName, (char*) deserializedValue);
+    } else {
+        printf("%s is an invalid field\n", fieldName);
+    }
+}
 
 void* getFieldValue (RecordType* rt, char* serializedEntry, const char* fieldName) {
     // Deal with variable_length and non-variable-length entry case separately
@@ -412,10 +428,20 @@ void* getFieldValue (RecordType* rt, char* serializedEntry, const char* fieldNam
             fieldSize ++;
         }
 
-        
-
+        char* deserialized = (char*) malloc (fieldSize + 1);
+        memcpy(deserialized, startPtr, fieldSize + 1);
+        return deserialized;
     }
 
     // Constant length case 
+    int fieldByteOffset = getByteOffsetNumber(rt, fieldName);
+    char* startPtr = serializedEntry + fieldByteOffset;
 
+    int fieldSize = getFieldBytes(fieldName);
+    char* deserialized = (char*) malloc (fieldSize + 1);
+    memcpy(deserialized, startPtr, fieldSize + 1);
+
+    printFieldValue(rt, deserialized, fieldName);
+    
+    return deserialized;
 }

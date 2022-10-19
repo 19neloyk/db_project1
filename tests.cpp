@@ -76,8 +76,19 @@ void testRecordType() {
         getFieldBytes("real") == 4
     );
 
+    multiAssert("convertStringToValue", 5, 
+        *(short*) convertStringToValue(SmallIntType, "12") == 12,
+        *(int*) convertStringToValue(IntegerType, "12000") == 12000,
+        *(float*) convertStringToValue(RealType, "100.23") == (float) 100.23,
+        strcmp((char*) convertStringToValue(CharType, "Neloy Kundu"), "Neloy Kundu") == 0,
+        strcmp((char*) convertStringToValue(VarType, "Neloy Kundu "), "Neloy Kundu ") == 0
+    );
+
     // We will create example records to test conversion functionality
-    
+    char* constant_r1 = convertToDBRecord(constantRT, 3, "21", "Neloy Kundu", "120000");
+    printf("Bruh: %s\n", constant_r1);
+    void* deserialized = getFieldValue(constantRT, constant_r1, "age");
+
     //TODO: Have to focus on the most effective way to deserialize and
     // serialize data; must consider overarching design decisions
     /*
