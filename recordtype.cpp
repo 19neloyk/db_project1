@@ -209,7 +209,11 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
         
         // Move current location forward by the length of the current
         // field value so as to append the next field value correctly
-        currentLocation += strlen(serializedValue);
+        if (fieldType != VarType) {
+            currentLocation += byteLimit;
+        } else {
+            currentLocation += strlen(serializedValue);
+        }
 
         // Closing '~' character in variable length for same reason
         // above
@@ -391,7 +395,9 @@ RecordType* createRecordType(const char* primaryKey, int length, ...) {
 
 void printFieldValue (RecordType* rt, void* deserializedValue, const char* fieldName) {
     int fieldValue = rt->fieldNameValueMap->at(fieldName);
-    if (fieldValue == SmallIntType || fieldValue == IntegerType) {
+    if (fieldValue == SmallIntType) {
+        printf("%s %d\n", fieldName, *(short*) deserializedValue);
+    } else if (fieldValue == IntegerType) {
         printf("%s %d\n", fieldName, *(int*) deserializedValue);
     } else if (fieldValue == RealType) {
         printf("%s %f\n", fieldName, *(float*) deserializedValue);
