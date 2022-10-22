@@ -15,8 +15,6 @@ void testRecordType() {
     // A variable recordtype 
     RecordType* pointerAndVariableRT = createRecordType("variablefield", 6, "variablefield", VarType, 8, "pointer", PointerType, 0);
 
-    printf("%s\n", constantRT->fieldNames[2]);
-
     // Used for multiple assertions
     multiAssert("createRecordType", 28, 
         // Constant record type
@@ -86,17 +84,9 @@ void testRecordType() {
 
     // We will create example records to test conversion functionality
     char* constant_r1 = convertToDBRecord(constantRT, 3, "21", "Neloy Kundu", "120000");
-    void* deserialized_1_cst = getFieldValue(constantRT, constant_r1, "age");
-    void* deserialized_2_cst = getFieldValue(constantRT, constant_r1, "name");
-    void* deserialized_3_cst = getFieldValue(constantRT, constant_r1, "salary");
-
     RecordType* variableRT = createRecordType("name", 9, "age", SmallIntType, 0, "name", VarType, 25, "attractiveness", RealType, 0);
-
     char* variable_r1 = convertToDBRecord(variableRT, 3, "21", "Neloy Kundu", "10.0");
     
-    void* deserialized_1_var = getFieldValue(variableRT, variable_r1, "age");
-    void* deserialized_2_var = getFieldValue(variableRT, variable_r1, "name");
-    void* deserialized_3_var = getFieldValue(variableRT, variable_r1, "attractiveness");
 
     multiAssert("convertToDBRecord",6,
         // Constant values
@@ -109,12 +99,6 @@ void testRecordType() {
         strcmp((char*) getFieldValue(variableRT, variable_r1, "name"), "Neloy Kundu") == 0,
         * (float*) getFieldValue(variableRT, variable_r1, "attractiveness") == (float) 10.0
     );
-
-    /*
-    multiAssert("stringedType",0
-
-    );
-    */
 }
 
 int main()  {
