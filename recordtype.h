@@ -88,7 +88,8 @@ int getFieldType(const char* typeString);
 
 /**
  * @brief Get the number of bytes with the specified type string
- * i.e. "CHAR(15)" or "VARCHAR(10)"
+ * i.e. "CHAR(15)" or "VARCHAR(10)"; this is used when creating
+ * a table
  * 
  * @param stringedType 
  * @return int representing number of bytes 
@@ -152,5 +153,6 @@ void printFieldValue (RecordType* rt, void* deserialized, const char* fieldName)
  * @return pointer of the parsed value
  */
 void* convertStringToValue(int type, const char* valueString);
+
 
 #endif

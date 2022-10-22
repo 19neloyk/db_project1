@@ -86,17 +86,31 @@ void testRecordType() {
 
     // We will create example records to test conversion functionality
     char* constant_r1 = convertToDBRecord(constantRT, 3, "21", "Neloy Kundu", "120000");
-    void* deserialized_1 = getFieldValue(constantRT, constant_r1, "age");
-    void* deserialized_2 = getFieldValue(constantRT, constant_r1, "name");
-    void* deserialized_3 = getFieldValue(constantRT, constant_r1, "salary");
+    void* deserialized_1_cst = getFieldValue(constantRT, constant_r1, "age");
+    void* deserialized_2_cst = getFieldValue(constantRT, constant_r1, "name");
+    void* deserialized_3_cst = getFieldValue(constantRT, constant_r1, "salary");
 
-    //TODO: Have to focus on the most effective way to deserialize and
-    // serialize data; must consider overarching design decisions
-    /*
-    multiAssert("convertToDBRecord",0
+    RecordType* variableRT = createRecordType("name", 9, "age", SmallIntType, 0, "name", VarType, 25, "attractiveness", RealType, 0);
 
+    char* variable_r1 = convertToDBRecord(variableRT, 3, "21", "Neloy Kundu", "10.0");
+    
+    void* deserialized_1_var = getFieldValue(variableRT, variable_r1, "age");
+    void* deserialized_2_var = getFieldValue(variableRT, variable_r1, "name");
+    void* deserialized_3_var = getFieldValue(variableRT, variable_r1, "attractiveness");
+
+    multiAssert("convertToDBRecord",6,
+        // Constant values
+        * (short*) getFieldValue(constantRT, constant_r1, "age") == 21,
+        strcmp((char*) getFieldValue(constantRT, constant_r1, "name"), "Neloy Kundu") == 0,
+        * (int*) getFieldValue(constantRT, constant_r1, "salary") == 120000,
+        
+        // Variable-length values
+        * (short*) getFieldValue(variableRT, variable_r1, "age") == 21,
+        strcmp((char*) getFieldValue(variableRT, variable_r1, "name"), "Neloy Kundu") == 0,
+        * (float*) getFieldValue(variableRT, variable_r1, "attractiveness") == (float) 10.0
     );
 
+    /*
     multiAssert("stringedType",0
 
     );

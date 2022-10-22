@@ -97,6 +97,11 @@ int getByteOffsetNumber(RecordType* rt, string field) {
     return rt->byteOffsets[fieldIndex];
 }
 
+int getByteSize(RecordType* rt, string field) {
+    int fieldIndex = rt->fieldNameIndexMap->at(field);
+    return rt->byteSizes[fieldIndex];
+}
+
 int getFieldType(const char* typeString) {
     // Convert typeString to string type since it's easier to find
     // substrings within
@@ -129,6 +134,7 @@ int getFieldBytes(const char* stringedType) {
     // First deal with already preset size types (1 to 3) that
     // the user can input:  smallint, integer, and real
     int fieldType = getFieldType(stringedType);
+    printf("type = %d\n", fieldType);
 
     if (fieldType == 1) {
         return 2;
@@ -177,6 +183,7 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
     // Variable-length entry case --> opening '%'
     if (rt->isVariableLength) {
         *currentLocation = '%';
+        currentLocation ++;
     }
 
     for (int i = 0; i < length ; i ++) {
@@ -184,6 +191,8 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
         int fieldType = rt->fieldTypes[i];
         int byteLimit = rt->byteSizes[i];
         char* fieldValue = va_arg(args, char*);
+
+        //printf("")
     
         void* convertedValue = convertStringToValue(fieldType, fieldValue);
         if (convertedValue == NULL) {
@@ -193,6 +202,7 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
         if (serializedValue == NULL) {
             return NULL;
         }
+
 
         // Converted fieldValue to serialized char arr that will
         // be stored as a record
@@ -205,7 +215,7 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
 
         // Note that serializedValue is the current field's value
         // We add this field to our array of bytes
-        strcpy(currentLocation, serializedValue);
+        memcpy(currentLocation, serializedValue, byteLimit);
         
         // Move current location forward by the length of the current
         // field value so as to append the next field value correctly
@@ -227,6 +237,7 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
     // Variable-length entry case --> closing '%'
     if (rt->isVariableLength) {
         *currentLocation = '%';
+        currentLocation ++;
     }
 
 
@@ -422,7 +433,9 @@ void* getFieldValue (RecordType* rt, char* serializedEntry, const char* fieldNam
             if (*startPtr == '~') {
                 fieldDividerCount ++;
             }
+            startPtr++;
         }
+
 
         // Now start pointer should be located at the start of he field 
         // Let us get the size of the field entry; accomodate the same
@@ -434,8 +447,10 @@ void* getFieldValue (RecordType* rt, char* serializedEntry, const char* fieldNam
             fieldSize ++;
         }
 
-        char* deserialized = (char*) malloc (fieldSize + 1);
-        memcpy(deserialized, startPtr, fieldSize + 1);
+        char* deserialized = (char*) malloc (fieldSize);
+        memcpy(deserialized, startPtr, fieldSize);
+
+        printFieldValue(rt, deserialized, fieldName);
         return deserialized;
     }
 
@@ -443,7 +458,7 @@ void* getFieldValue (RecordType* rt, char* serializedEntry, const char* fieldNam
     int fieldByteOffset = getByteOffsetNumber(rt, fieldName);
     char* startPtr = serializedEntry + fieldByteOffset;
 
-    int fieldSize = getFieldBytes(fieldName);
+    int fieldSize = getByteSize(rt, fieldName);
     char* deserialized = (char*) malloc (fieldSize + 1);
     memcpy(deserialized, startPtr, fieldSize + 1);
 
