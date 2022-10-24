@@ -87,8 +87,7 @@ void testRecordType() {
     RecordType* variableRT = createRecordType("name", 9, "age", SmallIntType, 0, "name", VarType, 25, "attractiveness", RealType, 0);
     char* variable_r1 = convertToDBRecord(variableRT, 3, "21", "Neloy Kundu", "10.0");
     
-
-    multiAssert("convertToDBRecord",6,
+    multiAssert("convertToDBRecord", 6,
         // Constant values
         * (short*) getFieldValue(constantRT, constant_r1, "age") == 21,
         strcmp((char*) getFieldValue(constantRT, constant_r1, "name"), "Neloy Kundu") == 0,
