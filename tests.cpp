@@ -1,7 +1,8 @@
-#ifndef RECORDTYPE_TESTS_H
-#define RECORDTYPE_TESTS_H
+#ifndef TESTS_H
+#define TESTS_H
 
 #include "recordtype.h"
+#include "database.h"
 #include "tester.h"
 
 /**
@@ -102,15 +103,30 @@ void testRecordType() {
 }
 
 /**
- * @brief Function that tests functionality of the database's creation of blocks
+ * @brief Function that tests functionality of the database's
+ * block creation in multiple scenarios: creation of database primary block
+ * table root blocks creation of the blocks for each table root block,
+ * creation of blocks storing the entries, et cetera
  * 
  */
-void () {
+void testBlockCreation() {
 
+    Database* db = createDatabase(UnorderedIndex, 512);
+
+    // Used for database creation
+    multiAssert("createDatabase", 2
+
+    );
+
+    //Used for table creation
+    multiAssert("createTable", 2
+
+    );
 }
 
 int main ()  {
     testRecordType();
+    testBlockCreation();
 }
 
 #endif

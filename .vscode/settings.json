@@ -10,6 +10,7 @@
         "bitset": "cpp",
         "map": "cpp",
         "utility": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "type_traits": "cpp"
     }
 }
