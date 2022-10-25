@@ -70,10 +70,11 @@ Database* createDatabase(IndexType t, int blocksize);
  * @brief Add an additional block (for entries)
  * to the specified table by pointer access
  * 
+ * @param db the database that we are working in
  * @param tableRootPtr the table from which we get the additional entries
  * @return bool indicates whether the addition operation was successful or not
 */
-bool addBlock(void* tableRootPtr);
+bool addBlock(Database* db, void* tableRootPtr);
 
 
 /**
@@ -88,13 +89,20 @@ void* getTableRootPtr(char* name);
  * @brief Get a the record type for a certain table based on
  * its name
  * @param name 
- * @return void* the record type of the specified table
+ * @return RecordType* the record type of the specified table
  */
-void* getTableRecordType(char* name);
+RecordType* getTableRecordType(Database* db, char* table_name);
 
-template<typename... Args>void createTable(Database* db, const char *table_name, const char *primary_key, int length, Args&& ...);
-void select(Database* db, const char *table_name, int length, ...);
-void insert(Database* db, const char *table_name, int length, ...);
-void update(Database* db, const char *table_name, int length, ...);
+template<typename... Args>
+void createTable(Database* db, const char *table_name, const char *primary_key, int length, Args&& ... args);
+
+template<typename... Args>
+void select(Database* db, const char *table_name, int length, Args&& ... args);
+
+template<typename... Args>
+void insert(Database* db, const char *table_name, int length, Args&& ... args);
+
+template<typename... Args>
+void update(Database* db, const char *table_name, int length, Args&& ... args);
 
 #endif

@@ -110,7 +110,6 @@ void testRecordType() {
  * 
  */
 void testBlockCreation() {
-
     Database* db = createDatabase(UnorderedIndex, 512);
 
     // Used for database creation
