@@ -1,7 +1,6 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 #include "recordtype.h"
-#include "block.h"
 #include <string.h>
 using namespace std;
 
@@ -11,7 +10,18 @@ enum IndexType{
     HashedIndex
 };
 
-class Database {
+struct Database {
+
+    /** 
+     * @brief Create a new Database struct
+     * @param t the type of indexing in the
+     * database that we will use
+     * @param blocksize indicates the block
+     * sizes that we will use with this db
+     * 
+     * @return a newly allocated database 
+     */
+    Database* createDatabase(IndexType t, int blocksize);
 
     /**
      * @brief Denotes the indexing structure that will
@@ -27,16 +37,15 @@ class Database {
     int numTables;
 
     /** @brief list of tables
-     * 
      * points to void* 's that each represent a table root;
-     * each table's root block; in each table, which is a
-     * block of char where 
+     * each table's root block; in each root block is an
+     * array of 
      */
-    void** tables;
+    void** dbPrimaryBlock;
 
     /**
-     * @brief Maps table name to index in table's pointer array above
-     * 
+     * @brief Maps table name to index in dbPrimaryBlock's
+     * pointer array above
      */
     map<string, int>* tableIndexMap;
 
@@ -62,12 +71,9 @@ class Database {
      */
     void* getTableRecordType(char* name);
 
-
-    Database* createDatabase();
-
     void processQuery(Database* db, string query);
 
-    void create_table(Database* db, const char *table_name, const char *primary_key, int length, ...);
+    template<typename... Args>void createTable(Database* db, const char *table_name, const char *primary_key, int length, ...);
     void select(Database* db, const char *table_name, int length, ...);
     void insert(Database* db, const char *table_name, int length, ...);
     void update(Database* db, const char *table_name, int length, ...);

@@ -123,6 +123,9 @@ int getFieldType(const char* typeString) {
     } else if (convertedString.find("char") != string::npos) {
         // Char case
         return 4;
+    } else if (convertedString.find("pointer") != string::npos) {
+        // Pointer case
+        return 0;
     }
 
     // Case where this is not a valid type string
@@ -191,8 +194,6 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
         int fieldType = rt->fieldTypes[i];
         int byteLimit = rt->byteSizes[i];
         char* fieldValue = va_arg(args, char*);
-
-        //printf("")
     
         void* convertedValue = convertStringToValue(fieldType, fieldValue);
         if (convertedValue == NULL) {
@@ -307,7 +308,7 @@ RecordType* createRecordType(const char* primaryKey, int length, ...) {
     recordType->primaryField = primaryKey;
 
     // Create sizes for class array variables we have created
-    recordType->numFields = length/3;
+    recordType->numFields = length/2;
 
     // Organizational structures that will help us immensely
     recordType->fieldTypes = (int*) malloc (sizeof(int) * recordType->numFields);
@@ -327,24 +328,24 @@ RecordType* createRecordType(const char* primaryKey, int length, ...) {
 
     recordType->isVariableLength = false;
     for (int i = 0; i < length ; i ++) {
-        if (i % 3 == 0) {
+        if (i % 2 == 0) {
             name = va_arg(args,char*);
-        } else if (i % 3 == 1) {
-            curType = va_arg(args, int);
         } else {
-            curN = va_arg(args, int);
+            char* typeString = va_arg(args, char*);
+            curType = getFieldType(typeString);
+            curN = getFieldBytes(typeString);
             
             // Used to create a new instance to 
-            char* allocatedFieldName = (char *) malloc (strlen(name) + 1);
+            char* allocatedFieldName = (char *) malloc (strlen(name));
             strcpy(allocatedFieldName, name);
-            recordType->fieldNames[i/3] = allocatedFieldName;
+            recordType->fieldNames[i/2] = allocatedFieldName;
 
             // Use string because we want to leverage its ease of use in the
             // maps we use for organizational efficiency
             string curName = name;
-            recordType->fieldNameIndexMap->insert(make_pair(curName, i/3));
+            recordType->fieldNameIndexMap->insert(make_pair(curName, i/2));
 
-            recordType->fieldTypes[i/3] = curType;
+            recordType->fieldTypes[i/2] = curType;
             int byteSize = 0;
             if (curType == 0) {
                 byteSize = sizeof(void*);
@@ -361,12 +362,12 @@ RecordType* createRecordType(const char* primaryKey, int length, ...) {
                 byteSize = -1;
             }
             
-            (recordType->byteSizes)[i/3] = byteSize;
+            (recordType->byteSizes)[i/2] = byteSize;
 
-            if (i/3 == 0) {
-                recordType->byteOffsets[i/3] = 0;
+            if (i/2 == 0) {
+                recordType->byteOffsets[i/2] = 0;
             } else {
-                recordType->byteOffsets[i/3] = recordType->byteOffsets[(i/3) - 1] + recordType->byteSizes[(i/3) - 1];
+                recordType->byteOffsets[i/2] = recordType->byteOffsets[(i/2) - 1] + recordType->byteSizes[(i/2) - 1];
             }
             recordType->fieldNameValueMap->insert(make_pair(curName, curType));
         }

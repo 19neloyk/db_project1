@@ -10,11 +10,12 @@
  */
 void testRecordType() {
     // A constant recordtype
-    RecordType* constantRT = createRecordType("name", 9, "age", SmallIntType, 0, "name", CharType, 25, "salary", IntegerType, 0);
+    RecordType* constantRT = createRecordType("name", 6, "age", "smallint", "name", "char(25)", "salary", "integer");
     
     // A variable recordtype 
-    RecordType* pointerAndVariableRT = createRecordType("variablefield", 6, "variablefield", VarType, 8, "pointer", PointerType, 0);
+    RecordType* pointerAndVariableRT = createRecordType("variablefield", 4, "variablefield", "varchar(25)", "pointer", "pointer");
 
+    printf("Max size: %d\n", pointerAndVariableRT->maxSize);
     // Used for multiple assertions
     multiAssert("createRecordType", 28, 
         // Constant record type
@@ -39,8 +40,8 @@ void testRecordType() {
         strcmp(constantRT->primaryField, "name") == 0,
 
         // Variable record type
-        pointerAndVariableRT->maxSize == sizeof(void*) + 8 + 6,
-        pointerAndVariableRT->byteSizes[0] == 8,
+        pointerAndVariableRT->maxSize == 25 + 8 + 6, // Because includes opening and closing characters
+        pointerAndVariableRT->byteSizes[0] == 25,
         pointerAndVariableRT->byteSizes[1] == sizeof(void*),
         pointerAndVariableRT->isVariableLength == true,
         // We don't have to store byte offsets for variable length
@@ -57,7 +58,7 @@ void testRecordType() {
         getByteOffsetNumber(constantRT, "name") == 2,
         getByteOffsetNumber(constantRT, "salary") == 27,
         getByteOffsetNumber(pointerAndVariableRT, "variablefield") == 0,
-        getByteOffsetNumber(pointerAndVariableRT, "pointer") == 8
+        getByteOffsetNumber(pointerAndVariableRT, "pointer") == 25
     );
 
 
@@ -84,7 +85,7 @@ void testRecordType() {
 
     // We will create example records to test conversion functionality
     char* constant_r1 = convertToDBRecord(constantRT, 3, "21", "Neloy Kundu", "120000");
-    RecordType* variableRT = createRecordType("name", 9, "age", SmallIntType, 0, "name", VarType, 25, "attractiveness", RealType, 0);
+    RecordType* variableRT = createRecordType("name", 6, "age", "integer", "name", "varchar(25)", "attractiveness", "real");
     char* variable_r1 = convertToDBRecord(variableRT, 3, "21", "Neloy Kundu", "10.0");
     
     multiAssert("convertToDBRecord", 6,
@@ -100,7 +101,15 @@ void testRecordType() {
     );
 }
 
-int main()  {
+/**
+ * @brief Function that tests functionality of the database's creation of blocks
+ * 
+ */
+void () {
+
+}
+
+int main ()  {
     testRecordType();
 }
 
