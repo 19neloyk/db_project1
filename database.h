@@ -76,14 +76,14 @@ Database* createDatabase(IndexType t, int blocksize);
 */
 bool addBlock(Database* db, void* tableRootPtr);
 
-
 /**
  * @brief Get a pointer for a certain table's root block
  * according to its name
- * @param name 
+ * @param db the database that we are accessing
+ * @param name name of table we are looking for
  * @return void* get the address to a specified table
  */
-void* getTableRootPtr(char* name);
+void* getTableRootPtr(Database* db, const char* name);
 
 /**
  * @brief Get a the record type for a certain table based on
@@ -93,16 +93,24 @@ void* getTableRootPtr(char* name);
  */
 RecordType* getTableRecordType(Database* db, char* table_name);
 
-template<typename... Args>
-void createTable(Database* db, const char *table_name, const char *primary_key, int length, Args&& ... args);
+void createTable(Database* db, const char *table_name, const char *primary_key, int length, ...);
 
-template<typename... Args>
-void select(Database* db, const char *table_name, int length, Args&& ... args);
+/**
+ * @brief Get pointers to each record 
+ * 
+ * @param db the database that we are pulling from
+ * @param rt the record type of the records in the table
+ * @param tableRootPtr pointer to the table root
+ * @param condition the condition that we would like to evaluate for
+ * @param totalEntries total number of entries in this table
+ * @return char** 
+ */
+char** queriedRecords (Database* db, RecordType* rt, void* tableRootPtr, const char** condition, int totalEntries);
 
-template<typename... Args>
-void insert(Database* db, const char *table_name, int length, Args&& ... args);
+void select(Database* db, const char *table_name, int length, ...);
 
-template<typename... Args>
-void update(Database* db, const char *table_name, int length, Args&& ... args);
+void insert(Database* db, const char *table_name, int length, ...);
+
+void update(Database* db, const char *table_name, int length, ...);
 
 #endif

@@ -107,11 +107,11 @@ int getFieldBytes(const char* stringedType);
  * @param rt the RecordType that this DB record is for
  * @param length number of arguments; should also 
  * be equal to numFields
- * @param ... (fieldVal_1, fieldVal_2, ..., fieldVal_k)
+ * @param args (fieldVal_1, fieldVal_2, ..., fieldVal_k)
  * where every value is a string
  * @return void* 
  */
-char* convertToDBRecord(RecordType* rt, int length, ...);
+char* convertToDBRecord(RecordType* rt, int length, const char** args);
 
 // Get string version of type
 string stringedType(int n); 
@@ -120,12 +120,12 @@ string stringedType(int n);
  * @brief creates a record type for entries to be of
  * @param primaryKey the primary key of this record type
  * @param length the number of arguments
- * @param ellipses (...) of form (fieldName, fieldType, fieldN, fieldName,
+ * @param args of form (fieldName, fieldType, fieldN, fieldName,
  * fieldType, fieldN...), so triples (fieldN is 0 id fieldType is not char or
  * varchar)
  * @return a record type 
  */
-RecordType* createRecordType( const char* primaryKey, int length, ...);
+RecordType* createRecordType( const char* primaryKey, int length, const char** args);
 
 
 /**

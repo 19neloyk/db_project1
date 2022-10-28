@@ -168,7 +168,7 @@ int getFieldBytes(const char* stringedType) {
     return atoi(intStart);
 }
 
-char* convertToDBRecord(RecordType* rt, int length, ...) {
+char* convertToDBRecord(RecordType* rt, int length, const char** args) {
     // Make sure the number of arguments is the same
     if (rt->numFields != length) {
         return NULL;
@@ -176,8 +176,6 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
 
 
     // Iterate over values of a new record type
-    va_list args;
-    va_start(args, length);
 
     // The character string we will end up returning
     char* dbRecord = (char*) malloc(rt->maxSize);
@@ -193,7 +191,7 @@ char* convertToDBRecord(RecordType* rt, int length, ...) {
 
         int fieldType = rt->fieldTypes[i];
         int byteLimit = rt->byteSizes[i];
-        char* fieldValue = va_arg(args, char*);
+        const char* fieldValue = args[i];
     
         void* convertedValue = convertStringToValue(fieldType, fieldValue);
         if (convertedValue == NULL) {
@@ -300,7 +298,7 @@ string stringedType(int n) {
     }
 }
 
-RecordType* createRecordType(const char* primaryKey, int length, ...) {
+RecordType* createRecordType(const char* primaryKey, int length, const char** args) {
 
     // Create the new record type
     RecordType* recordType = (RecordType*) malloc(sizeof(RecordType));
@@ -319,19 +317,16 @@ RecordType* createRecordType(const char* primaryKey, int length, ...) {
     recordType->fieldNameValueMap = new map<string, int>();
     recordType->fieldNameIndexMap = new map<string, int>();
 
-    va_list args;
-    va_start(args, length);
-
-    char* name;
+    const char* name;
     int curType;
     int curN;
 
     recordType->isVariableLength = false;
     for (int i = 0; i < length ; i ++) {
         if (i % 2 == 0) {
-            name = va_arg(args,char*);
+            name = args[i];
         } else {
-            char* typeString = va_arg(args, char*);
+            const char* typeString = args[i];
             curType = getFieldType(typeString);
             curN = getFieldBytes(typeString);
             

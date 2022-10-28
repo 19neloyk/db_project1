@@ -33,20 +33,26 @@ bool addBlock(Database* db, void* tablePtr) {
     // Access the number of block variables and
     // increment it by 1
     ((int*) tablePtr)[1] ++;
-    return;
+    return true;
 }
 
-template<typename... Args>void createTable(Database* db, const char *table_name, const char *primary_key, int length, Args&&... args) {
+void createTable(Database* db, const char *table_name, const char *primary_key, int length, ...) {
     // Check if there is already a table with the specified name
     string tableName = string(table_name);
-    if (db->tableIndexMap->find(tableName) == db->tableIndexMap->end()) {
+    if (db->tableIndexMap->find(tableName) != db->tableIndexMap->end()) {
     // not found case
-        printf("Table '%s' already exists, please use another name\n", tableName);
+        printf("Table '%s' already exists, please use another name\n", table_name);
         return;
     } 
 
+    const char* rtArgs[length];
+    va_list args;
+    va_start(args, length);
+    for (int i = 0 ; i < length ; i ++) {
+        rtArgs[i] = va_arg(args, char*);
+    }
     // Create the specified record type and add into record type map
-    RecordType* rt = createRecordType(primary_key, length, forward<Args>(args)...);
+    RecordType* rt = createRecordType(primary_key, length, rtArgs);
     db->tableRecordTypeMap->insert(make_pair(tableName, rt));
 
     // Now allocate memory for the table's root block and insert it
@@ -69,7 +75,7 @@ template<typename... Args>void createTable(Database* db, const char *table_name,
     ((int*) tableRootBlockPtr)[0] = numEntries;
     ((int*) tableRootBlockPtr)[1] = numBlocks;
 
-    if (!addBlock(tableRootBlockPtr, tableRootBlockPtr)) {
+    if (!addBlock(db, tableRootBlockPtr)) {
         printf("Couldn't add block \n");
         return;
     }
@@ -83,21 +89,6 @@ void* getTableRootPtr(Database* db, const char* table_name) {
 
 RecordType* getTableRecordType(Database* db, const char* table_name) {
     return db->tableRecordTypeMap->at(table_name);
-}
-
-template<typename... Args>
-void insert(Database* db, const char* table_name, int length, Args&&... args) {
-    void* tableRootPtr =  getTableRootPtr(db, table_name);
-    RecordType* rt = getTableRecordType(db, table_name);
-    char* record = convertToDBRecord(rt, length, args);
-    if (db->type == 0) {
-        insert_unordered();
-    } else if (db->type == 1) {
-        printf("This index has not been implemented yet.\n");
-    } else {
-        printf("Invalid type.\n");
-    }
-
 }
 
 void insert_unordered (Database* db, RecordType* rt, void* tableRootPtr, char* record) {
@@ -133,6 +124,7 @@ void insert_unordered (Database* db, RecordType* rt, void* tableRootPtr, char* r
 
         if (remainingBlockSpace < strlen(record)) {
             strcpy(endOfRecords + 1, record);
+            ((int*) tableRootPtr)[0] ++;
             printf("Successful insert! \n");
             return;
         } else {
@@ -171,3 +163,28 @@ void insert_unordered (Database* db, RecordType* rt, void* tableRootPtr, char* r
     }
 }
 
+void insert(Database* db, const char* table_name, int length, ...) {
+    void* tableRootPtr =  getTableRootPtr(db, table_name);
+    RecordType* rt = getTableRecordType(db, table_name);
+
+    const char* rtArgs[length];
+    va_list args;
+    va_start(args, length);
+    for (int i = 0 ; i < length ; i ++) {
+        rtArgs[i] = va_arg(args, char*);
+    }
+
+    char* record = convertToDBRecord(rt, length, rtArgs);
+    if (db->type == 0) {
+        insert_unordered(db, rt, tableRootPtr, record);
+    } else if (db->type == 1) {
+        printf("This index has not been implemented yet.\n");
+    } else {
+        printf("Invalid type.\n");
+    }
+}
+
+
+char** queriedRecords (Database* db, RecordType* rt, void* tableRootPtr, const char** condition, int totalEntries) {
+    char** matched = (char**) malloc (sizeof(char*) * totalEntries);
+}

@@ -11,10 +11,12 @@
  */
 void testRecordType() {
     // A constant recordtype
-    RecordType* constantRT = createRecordType("name", 6, "age", "smallint", "name", "char(25)", "salary", "integer");
+    const char* constantRTArgs[6] = {"age", "smallint", "name", "char(25)", "salary", "integer"};
+    RecordType* constantRT = createRecordType("name", 6, constantRTArgs);
     
     // A variable recordtype 
-    RecordType* pointerAndVariableRT = createRecordType("variablefield", 4, "variablefield", "varchar(25)", "pointer", "pointer");
+    const char* pointerAndVariableRTArgs[4] = {"variablefield", "varchar(25)", "pointer", "pointer"};
+    RecordType* pointerAndVariableRT = createRecordType("variablefield", 4, pointerAndVariableRTArgs);
 
     printf("Max size: %d\n", pointerAndVariableRT->maxSize);
     // Used for multiple assertions
@@ -85,9 +87,14 @@ void testRecordType() {
     );
 
     // We will create example records to test conversion functionality
-    char* constant_r1 = convertToDBRecord(constantRT, 3, "21", "Neloy Kundu", "120000");
-    RecordType* variableRT = createRecordType("name", 6, "age", "integer", "name", "varchar(25)", "attractiveness", "real");
-    char* variable_r1 = convertToDBRecord(variableRT, 3, "21", "Neloy Kundu", "10.0");
+    const char* constant_r1Args[3] = {"21", "Neloy Kundu", "120000"};
+    char* constant_r1 = convertToDBRecord(constantRT, 3, constant_r1Args );
+    
+    const char* varRTArgs[6] = {"age", "integer", "name", "varchar(25)", "attractiveness", "real"};
+    RecordType* variableRT = createRecordType("name", 6, varRTArgs);
+    
+    const char* var_r1Args[3] = {"21", "Neloy Kundu", "10.0"};
+    char* variable_r1 = convertToDBRecord(variableRT, 3, var_r1Args);
     
     multiAssert("convertToDBRecord", 6,
         // Constant values
@@ -109,23 +116,31 @@ void testRecordType() {
  * creation of blocks storing the entries, et cetera
  * 
  */
-void testBlockCreation() {
+void testUnorderedDBOperations() {
     Database* db = createDatabase(UnorderedIndex, 512);
 
     // Used for database creation
-    multiAssert("createDatabase", 2
-
+    multiAssert("createDatabase", 1,
+        db != NULL
     );
 
-    //Used for table creation
-    multiAssert("createTable", 2
-
+    // Do table creation and then do testing based on tables
+    createTable(db, "student", "id", 6, "id", "smallint", "name", "char(25)", "age", "integer");
+    void* tablePtr = getTableRootPtr(db, "student");
+    multiAssert("createTable", 5,
+        db->tableIndexMap->at("student") == 0,
+        strcmp(db->tableRecordTypeMap->at("student")->fieldNames[0], "id") == 0,
+        strcmp(db->tableRecordTypeMap->at("student")->fieldNames[1], "name") == 0,
+        strcmp(db->tableRecordTypeMap->at("student")->fieldNames[2], "age") == 0,
+        ((int*) tablePtr)[0] == 0,
+        ((int*) tablePtr)[1] == 1
+        
     );
 }
 
 int main ()  {
     testRecordType();
-    testBlockCreation();
+    testUnorderedDBOperations();
 }
 
 #endif
