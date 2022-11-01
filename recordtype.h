@@ -154,5 +154,27 @@ void printFieldValue (RecordType* rt, void* deserialized, const char* fieldName)
  */
 void* convertStringToValue(int type, const char* valueString);
 
+/**
+ * @brief check if a type is a numeric type
+ * 
+ * @param type what integer
+ * @return true type is a numeric value
+ * @return false type is a non-numeric, usually string value
+ */
+bool isNumericType(int type);
+
+/**
+ * @brief Used to check if a certain record type is valid under a broken up where clause or not
+ * 
+ * @param rt the record type
+ * @param fieldName the field in question
+ * @param op the char that details operation
+ * @param val the value that we are comparing the fieldName to
+ * @param serializedEntry the serialized entry
+ * @return true 
+ * @return false 
+ */
+bool isValidComparison(RecordType* rt, string fieldName, const char op, const char* val, const char* serializedEntry);
+
 
 #endif

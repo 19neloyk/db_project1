@@ -462,3 +462,14 @@ void* getFieldValue (RecordType* rt, char* serializedEntry, const char* fieldNam
     
     return deserialized;
 }
+
+bool isNumericType(int type) {
+    if (type == SmallIntType || type == IntegerType || type == RealType) {
+        return true;
+    }
+    return false;
+}
+
+bool isValidComparison(RecordType* rt, string fieldName, const char op, const char* val, const char* serializedEntry) {
+    
+}

@@ -105,9 +105,19 @@ void createTable(Database* db, const char *table_name, const char *primary_key, 
  * @param totalEntries total number of entries in this table
  * @return char** 
  */
-char** queriedRecords (Database* db, RecordType* rt, void* tableRootPtr, const char** condition, int totalEntries);
+char** queriedRecords (Database* db, RecordType* rt, void* tableRootPtr, const char* condition, int totalEntries);
 
-void select(Database* db, const char *table_name, int length, ...);
+
+/**
+ * @brief print matching records from the database
+ * 
+ * @param db the database we are working on
+ * @param tableName name of the table
+ * @param length how many arguments after
+ * @param ... 
+ * @return int - the number of matching elements
+ */
+int select(Database* db, const char *tableName, int length, ...);
 
 void insert(Database* db, const char *table_name, int length, ...);
 

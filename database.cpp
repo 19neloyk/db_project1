@@ -136,7 +136,7 @@ void insert_unordered (Database* db, RecordType* rt, void* tableRootPtr, char* r
                 insert_unordered(db, rt, tableRootPtr, record);
             } else {
                 printf("No more space: we can't add another block, sadly... Insert failed\n");
-                return ;
+                return;
             }
         } 
     } else {
@@ -184,7 +184,78 @@ void insert(Database* db, const char* table_name, int length, ...) {
     }
 }
 
+int select (Database* db, const char *tableName, int length, ...) {
+    // First extract selected fields and where clause
+    const char* rtArgs[length];
+    va_list args;
+    va_start(args, length);
 
-char** queriedRecords (Database* db, RecordType* rt, void* tableRootPtr, const char** condition, int totalEntries) {
-    char** matched = (char**) malloc (sizeof(char*) * totalEntries);
+    RecordType* rt = db->tableRecordTypeMap->at(tableName);
+    
+    // Selected fields (separated by ', ': comma and a space)
+    // Only support one condition right now
+    char *selectedFields, *condition;
+    selectedFields = va_arg(args, char*);
+    condition = va_arg(args, char*);
+    
+    // Parse for the selectedFields
+    // Get number of commas first
+    int numElements = 1;
+    int selFieldLen = strlen(selectedFields);
+    for (int i = 0 ; i < selFieldLen ; i ++) {
+        if (selectedFields[i] == ',') {
+            numElements ++;
+        }
+    }
+
+    // Now make an array of stringed fields
+    // Let each element of the array be a pointer
+    // to the first character of the field
+    char* fieldNameStarts[numElements];
+    fieldNameStarts[0] = selectedFields;
+    
+    int curIndex = 1;
+    for (int i = 1 ; i < selFieldLen ; i ++) {
+        if (selectedFields[i] == ',') {
+            // Do this so that we can use strcpy later
+            selectedFields[i] = '\0';
+
+            // First character of field will be located after
+            // ', '
+            fieldNameStarts[curIndex] = selectedFields + 2;
+            curIndex ++;
+        }
+    }
+
+    // Arbitrarily let each field have a
+    // max of 100 characters
+    char curFieldName[100];
+
+    // Use string for easier conversion
+    string fieldsWanted[numElements];
+    for (int i = 0; i < numElements; i ++) {
+        strcpy(curFieldName, fieldNameStarts[i]);
+        fieldsWanted[i] = string(curFieldName);
+    }
+
+    // Currently, if every field is wanted, then fieldsWanted[0]
+    // will be "*", otherwise it will be a list
+
+
+    // We will now scan what the condition is
+    // leftArgument represents a field and 
+    // rightArgument represents a values
+    char leftArgument[100], rightArgument[100];
+    char op;
+    sscanf(condition, "%s %c %s", leftArgument, op, rightArgument);
+    string leftArg = string(leftArgument);
+
+    // Check if type is a numeric type
+    int leftArgumentType = rt->fieldNameValueMap->at(leftArg);
+    if (!isNumericType(leftArgumentType) && op != '=') {
+        printf("Invalid WHERE clause; strings can only use the '=' operator\n");
+        return;
+    }
+
+    // Use function for value comparison
 }
