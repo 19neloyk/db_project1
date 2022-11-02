@@ -470,6 +470,79 @@ bool isNumericType(int type) {
     return false;
 }
 
-bool isValidComparison(RecordType* rt, string fieldName, const char op, const char* val, const char* serializedEntry) {
-    
+int isMatchingRecord(RecordType* rt, char* fieldName, const char op, const char* comparingValue, char* serializedEntry) {
+    // Check if current type is a numeric type in order to check condition
+    int fieldType = rt->fieldNameValueMap->at(string(fieldName));
+    bool isNumericField = isNumericType(fieldType);
+
+    if (op != '=' && op != '>' && op != '<') {
+        printf("%c is an invalid comparison operator! This WHERE clause does not work\n", op);
+    }
+
+    // Deal with string case first
+    if (!isNumericField) {
+        char* fieldValue = (char*) getFieldValue(rt, serializedEntry, fieldName);
+        int comparisonResult = strcmp(fieldValue, comparingValue);
+
+        // Cases where comparison is fulfilled
+        // Return 1
+        if (op == '<' && comparisonResult < 0) {
+            return 1;
+        }
+        if (op == '>' && comparisonResult > 0) {
+            return 1;
+        }
+        if (op == '=' && comparisonResult == 0) {
+            return 1;
+        }
+
+        // Case where comparison is not fulfilled
+        // Return 0
+        return 0;
+    }
+
+    // Now we deal with the numeric cases
+    if (fieldType == SmallIntType){
+        short fieldValue = * (short*) getFieldValue(rt, serializedEntry, fieldName);
+        short comparingValue = * (short*) getFieldValue(rt, serializedEntry, fieldName);
+        
+        if (op == '<') {
+            return fieldValue < comparingValue;
+        }
+        if (op == '>') {
+            return fieldValue > comparingValue;
+        }
+        // Case of op = '='
+        return fieldValue == comparingValue;
+
+    } else if (fieldType == IntegerType) {
+        int fieldValue = * (int*) getFieldValue(rt, serializedEntry, fieldName);
+        int comparingValue = * (int*) getFieldValue(rt, serializedEntry, fieldName);
+        
+        if (op == '<') {
+            return fieldValue < comparingValue;
+        }
+        if (op == '>') {
+            return fieldValue > comparingValue;
+        }
+        // Case of op = '='
+        return fieldValue == comparingValue;
+    } else if (fieldType == RealType) {
+        float fieldValue = * (float*) getFieldValue(rt, serializedEntry, fieldName);
+        float comparingValue = * (float*) getFieldValue(rt, serializedEntry, fieldName);
+        
+        if (op == '<') {
+            return fieldValue < comparingValue;
+        }
+        if (op == '>') {
+            return fieldValue > comparingValue;
+        }
+        // Case of op = '='
+        return fieldValue == comparingValue;
+    }
+
+    // Case where fieldType does not equal any of the other types
+    printf("Internal issue, %s is a field of invalid type\n", fieldName);
+    return -1;
+
 }

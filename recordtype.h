@@ -164,17 +164,19 @@ void* convertStringToValue(int type, const char* valueString);
 bool isNumericType(int type);
 
 /**
- * @brief Used to check if a certain record type is valid under a broken up where clause or not
+ * @brief Used to check if a certain record is valid under a broken up where clause or not
+ * @brief Supports conditional operators '=', '<', '>'
  * 
  * @param rt the record type
  * @param fieldName the field in question
  * @param op the char that details operation
  * @param val the value that we are comparing the fieldName to
  * @param serializedEntry the serialized entry
- * @return true 
- * @return false 
+ * @return 0 -> false
+ * @return 1 -> true
+ * @return -1 -> condition is invalid
  */
-bool isValidComparison(RecordType* rt, string fieldName, const char op, const char* val, const char* serializedEntry);
+int isMatchingRecord(RecordType* rt, char* fieldName, const char op, const char* val, char* serializedEntry);
 
 
 #endif
