@@ -200,18 +200,18 @@ int select (Database* db, const char *tableName, int length, ...) {
     
     // Parse for the selectedFields
     // Get number of commas first
-    int numElements = 1;
+    int numFieldsWanted = 1;
     int selFieldLen = strlen(selectedFields);
     for (int i = 0 ; i < selFieldLen ; i ++) {
         if (selectedFields[i] == ',') {
-            numElements ++;
+            numFieldsWanted ++;
         }
     }
 
     // Now make an array of stringed fields
     // Let each element of the array be a pointer
     // to the first character of the field
-    char* fieldNameStarts[numElements];
+    char* fieldNameStarts[numFieldsWanted];
     fieldNameStarts[0] = selectedFields;
     
     int curIndex = 1;
@@ -227,17 +227,6 @@ int select (Database* db, const char *tableName, int length, ...) {
         }
     }
 
-    // Arbitrarily let each field have a
-    // max of 100 characters
-    char curFieldName[100];
-
-    // Use string for easier conversion
-    string fieldsWanted[numElements];
-    for (int i = 0; i < numElements; i ++) {
-        strcpy(curFieldName, fieldNameStarts[i]);
-        fieldsWanted[i] = string(curFieldName);
-    }
-
     // Currently, if every field is wanted, then fieldsWanted[0]
     // will be "*", otherwise it will be a list
 
@@ -249,13 +238,57 @@ int select (Database* db, const char *tableName, int length, ...) {
     char op;
     sscanf(condition, "%s %c %s", leftArgument, op, rightArgument);
     string leftArg = string(leftArgument);
+    
+    // Now go to the table and iterate over its entries
+    void* tableRootBlockPtr = getTableRootPtr(db, tableName);
+    int numEntries = ((int*) tableRootBlockPtr)[0];
+    int numBlocks = ((int*) tableRootBlockPtr)[1];
+    void** blockArr = (void**) (((int*) tableRootBlockPtr) + 2);
 
-    // Check if type is a numeric type
-    int leftArgumentType = rt->fieldNameValueMap->at(leftArg);
-    if (!isNumericType(leftArgumentType) && op != '=') {
-        printf("Invalid WHERE clause; strings can only use the '=' operator\n");
-        return;
+    int numMatches = 0;
+    
+    // Iterate over each block
+    for (int i = 0; i < numBlocks; i ++) {
+
+        void* curBlockPointer = blockArr[i];
+        
+        // Iterate over each element in the current block
+        // First deal with the non-variable case, then deal
+        // with the variable case
+
+        // Non-variable case
+        if (rt->isVariableLength) {
+            // Num of blocks in our current array
+            int elementCountCurBlock = db->blockSize/rt->maxSize;
+
+            // Element count in case where this is the last block
+            if (i == numBlocks - 1) {
+                elementCountCurBlock = numEntries % numBlocks;
+            }
+            
+
+            for (int j = 0 ; j < elementCountCurBlock ; j ++) {
+                // Get pointer to current record within the block
+                char* recordPointer = ((char*) curBlockPointer) + (j * rt->maxSize);
+                char serializedRecord[rt->maxSize]; 
+                memcpy(serializedRecord, recordPointer, rt->maxSize);
+                int matchResult = isMatchingRecord(rt, leftArgument, op, rightArgument, serializedRecord);
+                if (matchResult == 1) {
+                    numMatches ++;
+                    printf("–––––––––");
+                    for (int k = 0 ; k < numFieldsWanted; k ++) {
+                        printFieldValue(rt, serializedRecord, fieldNameStarts[k]);
+                    }
+                    printf("–––––––––");
+                }
+                if (matchResult == -1) {
+                    printf("ERROR with figuring out if this entry is a match\n");
+                }
+            }
+
+        // Now we deal with the variable case
+        } else {
+
+        }
     }
-
-    // Use function for value comparison
 }

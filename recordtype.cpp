@@ -403,13 +403,13 @@ RecordType* createRecordType(const char* primaryKey, int length, const char** ar
 void printFieldValue (RecordType* rt, void* deserializedValue, const char* fieldName) {
     int fieldValue = rt->fieldNameValueMap->at(fieldName);
     if (fieldValue == SmallIntType) {
-        printf("%s %d\n", fieldName, *(short*) deserializedValue);
+        printf("%s: %d\n", fieldName, *(short*) deserializedValue);
     } else if (fieldValue == IntegerType) {
-        printf("%s %d\n", fieldName, *(int*) deserializedValue);
+        printf("%s: %d\n", fieldName, *(int*) deserializedValue);
     } else if (fieldValue == RealType) {
-        printf("%s %f\n", fieldName, *(float*) deserializedValue);
+        printf("%s: %f\n", fieldName, *(float*) deserializedValue);
     } else if (fieldValue == CharType || fieldValue == VarType) {
-        printf("%s %s\n", fieldName, (char*) deserializedValue);
+        printf("%s: %s\n", fieldName, (char*) deserializedValue);
     } else {
         printf("%s is an invalid field\n", fieldName);
     }
