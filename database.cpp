@@ -285,10 +285,52 @@ int select (Database* db, const char *tableName, int length, ...) {
                     printf("ERROR with figuring out if this entry is a match\n");
                 }
             }
+        } // Now deal with variable-length case
+        else {
+            // We have to iterate with pointer arithmetic
+            // because we cannot make any assumptions about
+            // how the data is organized
 
-        // Now we deal with the variable case
-        } else {
+            // Let curStart be the opening X and let
+            // curEnd be the closing X of each record
+            char* curStart = (char*) curBlockPointer;
+            char* curEnd;
 
+            // Note that, in our system, two consecutive
+            // records will be separated by 'XX', the
+            // closing 'X' of the earlier record and the
+            // opening 'X' of the subsequent record
+            while (curStart == (char*) curBlockPointer || *(curEnd + 1) == 'X') {
+                char* curEnd = curStart + 1;
+                while (*curEnd != 'X') {
+                        curEnd ++;
+                }
+
+                char* recordPointer = curStart + 1;
+                int recordSize = curEnd - curStart;
+                char serializedRecord[recordSize]; 
+                memcpy(serializedRecord, recordPointer, recordSize);
+
+                // Identical code to non-variable length case
+                int matchResult = isMatchingRecord(rt, leftArgument, op, rightArgument, serializedRecord);
+                if (matchResult == 1) {
+                    numMatches ++;
+                    printf("–––––––––");
+                    for (int k = 0 ; k < numFieldsWanted; k ++) {
+                        printFieldValue(rt, serializedRecord, fieldNameStarts[k]);
+                    }
+                    printf("–––––––––");
+                }
+                if (matchResult == -1) {
+                    printf("ERROR with figuring out if this entry is a match\n");
+                }
+
+                // Set curStart to the start of the next record
+                curStart = curEnd + 1;
+            }
         }
+
+        // Return total number of matches found
+        return numMatches;
     }
 }
