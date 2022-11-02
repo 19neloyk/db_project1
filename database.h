@@ -119,8 +119,25 @@ char** queriedRecords (Database* db, RecordType* rt, void* tableRootPtr, const c
  */
 int select(Database* db, const char *tableName, int length, ...);
 
+/**
+ * @brief insert a record into the database
+ * 
+ * @param db the database that we are working on
+ * @param table_name name of the table
+ * @param length how many arguments after
+ * @param ... 
+ */
 void insert(Database* db, const char *table_name, int length, ...);
 
-void update(Database* db, const char *table_name, int length, ...);
+
+/**
+ * @brief update an entry or multiple entries in the database
+ * 
+ * @param db the database that we are working on 
+ * @param tableName name of the table
+ * @param length how many arguments are coming after
+ * @param int - the number of entries that we have updated
+ */
+int update(Database* db, const char *tableName, int length, ...);
 
 #endif

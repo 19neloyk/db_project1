@@ -334,3 +334,150 @@ int select (Database* db, const char *tableName, int length, ...) {
         return numMatches;
     }
 }
+
+int update(Database* db, const char *tableName, int length, ...) {
+    // First extract selected fields and where clause
+    va_list args;
+    va_start(args, length);
+    
+    RecordType* rt = db->tableRecordTypeMap->at(tableName);
+
+    // Get the fieldName and store the value of the fieldName
+    // into a character array to use it later in this function
+    char* fieldName = va_arg(args, char*);
+    int fieldType = rt->fieldNameValueMap->at(string(fieldName));
+    int fieldBytes = getFieldBytes(fieldName);
+    
+    // We are going to store the fieldValue in its serialized
+    // string form on the stack, where for a numeric element
+    // of type n called x, stackFieldValue[0] = (char) x
+    char stackFieldValue[fieldBytes];
+    if (isNumericType(fieldType)) {
+        if (fieldType == SmallIntType) {
+            stackFieldValue[0] = (char) va_arg(args, short);
+        } else if (fieldType == IntegerType) {
+            stackFieldValue[0] = (char) va_arg(args, int);
+        }
+        // Real Int type
+        else {
+            stackFieldValue[0] = (char) va_arg(args, float);
+        }
+    }
+    // Case this is a string type element
+    else {
+        strcpy(stackFieldValue, va_arg(args, char*));
+    }
+    
+    // First find the specific records (similar to the select statement)
+    // that match the WHERE clause
+    char* condition = va_arg(args, char*);
+
+    // We will now scan what the condition is
+    // leftArgument represents a field and 
+    // rightArgument represents a values
+    char leftArgument[100], rightArgument[100];
+    char op;
+    sscanf(condition, "%s %c %s", leftArgument, op, rightArgument);
+    string leftArg = string(leftArgument);
+    
+    // Now go to the table and iterate over its entries
+    void* tableRootBlockPtr = getTableRootPtr(db, tableName);
+    int numEntries = ((int*) tableRootBlockPtr)[0];
+    int numBlocks = ((int*) tableRootBlockPtr)[1];
+    void** blockArr = (void**) (((int*) tableRootBlockPtr) + 2);
+
+    int numMatches = 0;
+    
+    // Iterate over each block
+    for (int i = 0; i < numBlocks; i ++) {
+
+        void* curBlockPointer = blockArr[i];
+        
+        // Iterate over each element in the current block
+        // First deal with the non-variable case, then deal
+        // with the variable case
+
+        // Non-variable case
+        if (rt->isVariableLength) {
+            // Num of blocks in our current array
+            int elementCountCurBlock = db->blockSize/rt->maxSize;
+
+            // Element count in case where this is the last block
+            if (i == numBlocks - 1) {
+                elementCountCurBlock = numEntries % numBlocks;
+            }
+            
+
+            for (int j = 0 ; j < elementCountCurBlock ; j ++) {
+                // Get pointer to current record within the block
+                char* recordPointer = ((char*) curBlockPointer) + (j * rt->maxSize);
+                char serializedRecord[rt->maxSize]; 
+                memcpy(serializedRecord, recordPointer, rt->maxSize);
+                int matchResult = isMatchingRecord(rt, leftArgument, op, rightArgument, serializedRecord);
+                if (matchResult == 1) {
+                    numMatches ++;
+                    // NOW MAKE THE SPECIFIED CHANGES and publish them to the block of data
+                    int fieldByteOffset = getByteOffsetNumber(rt, string(fieldName));
+                    if (isNumericType(fieldType)) {
+                        // Assumption that numeric types will only be stored max as
+                        // one byte (i.e. won't overflow)
+                        memcpy(recordPointer + fieldByteOffset, stackFieldValue, 1); 
+                    } else {
+                        strcpy(recordPointer + fieldByteOffset, stackFieldValue);
+                    }
+                }
+                if (matchResult == -1) {
+                    printf("ERROR with figuring out if this entry is a match\n");
+                }
+            }
+        } // Now deal with variable-length case
+        else {
+            printf("HAVE NOT IMPLEMENTED VARIABLE-LENGTH UPDATE OPERATION YET\n");
+        //     // We have to iterate with pointer arithmetic
+        //     // because we cannot make any assumptions about
+        //     // how the data is organized
+
+        //     // Let curStart be the opening X and let
+        //     // curEnd be the closing X of each record
+        //     char* curStart = (char*) curBlockPointer;
+        //     char* curEnd;
+
+        //     // Note that, in our system, two consecutive
+        //     // records will be separated by 'XX', the
+        //     // closing 'X' of the earlier record and the
+        //     // opening 'X' of the subsequent record
+        //     while (curStart == (char*) curBlockPointer || *(curEnd + 1) == 'X') {
+        //         char* curEnd = curStart + 1;
+        //         while (*curEnd != 'X') {
+        //                 curEnd ++;
+        //         }
+
+        //         char* recordPointer = curStart + 1;
+        //         int recordSize = curEnd - curStart;
+        //         char serializedRecord[recordSize]; 
+        //         memcpy(serializedRecord, recordPointer, recordSize);
+
+        //         // Identical code to non-variable length case
+        //         int matchResult = isMatchingRecord(rt, leftArgument, op, rightArgument, serializedRecord);
+        //         if (matchResult == 1) {
+        //             numMatches ++;
+        //             printf("–––––––––");
+        //             for (int k = 0 ; k < numFieldsWanted; k ++) {
+        //                 printFieldValue(rt, serializedRecord, fieldNameStarts[k]);
+        //             }
+        //             printf("–––––––––");
+        //         }
+        //         if (matchResult == -1) {
+        //             printf("ERROR with figuring out if this entry is a match\n");
+        //         }
+
+        //         // Set curStart to the start of the next record
+        //         curStart = curEnd + 1;
+        //     }
+        }
+
+        // Return total number of matches found
+        return numMatches;
+    }
+    
+}
