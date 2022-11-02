@@ -236,7 +236,7 @@ int select (Database* db, const char *tableName, int length, ...) {
     // rightArgument represents a values
     char leftArgument[100], rightArgument[100];
     char op;
-    sscanf(condition, "%s %c %s", leftArgument, op, rightArgument);
+    sscanf(condition, "%s %c %s", leftArgument, &op, rightArgument);
     string leftArg = string(leftArgument);
     
     // Now go to the table and iterate over its entries
@@ -329,10 +329,9 @@ int select (Database* db, const char *tableName, int length, ...) {
                 curStart = curEnd + 1;
             }
         }
-
-        // Return total number of matches found
-        return numMatches;
     }
+    // Return total number of matches found
+    return numMatches;
 }
 
 int update(Database* db, const char *tableName, int length, ...) {
@@ -354,13 +353,13 @@ int update(Database* db, const char *tableName, int length, ...) {
     char stackFieldValue[fieldBytes];
     if (isNumericType(fieldType)) {
         if (fieldType == SmallIntType) {
-            stackFieldValue[0] = (char) va_arg(args, short);
+            * (short*) stackFieldValue = (float) va_arg(args, int);
         } else if (fieldType == IntegerType) {
-            stackFieldValue[0] = (char) va_arg(args, int);
+            * (int*) stackFieldValue = va_arg(args, int);
         }
         // Real Int type
         else {
-            stackFieldValue[0] = (char) va_arg(args, float);
+            * (float*) stackFieldValue = (float) va_arg(args, double);
         }
     }
     // Case this is a string type element
@@ -377,7 +376,7 @@ int update(Database* db, const char *tableName, int length, ...) {
     // rightArgument represents a values
     char leftArgument[100], rightArgument[100];
     char op;
-    sscanf(condition, "%s %c %s", leftArgument, op, rightArgument);
+    sscanf(condition, "%s %c %s", leftArgument, &op, rightArgument);
     string leftArg = string(leftArgument);
     
     // Now go to the table and iterate over its entries
@@ -475,9 +474,9 @@ int update(Database* db, const char *tableName, int length, ...) {
         //         curStart = curEnd + 1;
         //     }
         }
-
-        // Return total number of matches found
-        return numMatches;
     }
+
+    // Return total number of matches found
+    return numMatches;
     
 }
